@@ -6,6 +6,7 @@ from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -34,12 +35,30 @@ def generate_launch_description():
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        arguments=['/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist'],
+        arguments=[
+            '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
+            '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+            '/model/patrol_robot/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            '/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model',
+        ],
+        remappings=[('/model/patrol_robot/tf', '/tf')],
+        output='screen')
+
+    # Robot modelinden TF agacini (tekerlek linkleri dahil) yayinlar
+    robot_state_publisher = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        parameters=[{
+            'robot_description': ParameterValue(robot_description, value_type=str),
+            'use_sim_time': True,
+        }],
         output='screen')
 
     # Gazebo'nun acilmasini beklemek icin robotu 6 saniye gecikmeyle ekle
     return LaunchDescription([
         gz_sim,
         bridge,
+        robot_state_publisher,
         TimerAction(period=6.0, actions=[spawn_robot]),
     ])
