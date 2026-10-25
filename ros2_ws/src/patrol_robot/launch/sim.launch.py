@@ -14,13 +14,14 @@ def generate_launch_description():
     ros_gz_sim_share = get_package_share_directory('ros_gz_sim')
 
     xacro_file = os.path.join(pkg_share, 'urdf', 'patrol_robot.urdf.xacro')
+    world_file = os.path.join(pkg_share, 'worlds', 'patrol_world.sdf')
     robot_description = Command(['xacro ', xacro_file])
 
     # Gazebo: bos dunya, simulasyon otomatik baslar (-r)
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(ros_gz_sim_share, 'launch', 'gz_sim.launch.py')),
-        launch_arguments={'gz_args': '-r empty.sdf'}.items())
+        launch_arguments={'gz_args': '-r ' + world_file}.items())
 
     # Robotu Gazebo'ya ekle
     spawn_robot = Node(
