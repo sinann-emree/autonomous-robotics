@@ -37,7 +37,9 @@ ROS 2 Jazzy with Gazebo Harmonic is the officially recommended pairing. Gazebo i
 autonomous-robotics/
 └── ros2_ws/
     └── src/
-        └── patrol_robot/   # ROS 2 Python package (skeleton)
+        └── patrol_robot/   # ROS 2 Python package
+            ├── urdf/       # Robot model (Xacro)
+            └── launch/     # Launch files
 ```
 
 ## Build
@@ -48,6 +50,23 @@ colcon build
 source install/setup.bash
 ```
 
+## Run the Simulation
+
+```bash
+cd ros2_ws
+colcon build --packages-select patrol_robot
+source install/setup.bash
+ros2 launch patrol_robot sim.launch.py
+```
+
+This starts Gazebo (empty world) and the ROS-to-Gazebo `/cmd_vel` bridge, then spawns the robot after a short delay. In a second terminal, drive it with the keyboard:
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p speed:=0.2 -p turn:=0.5
+```
+
+The robot keeps its last velocity command until a new one arrives (press `k` to stop). A command timeout is not implemented yet.
+
 ## Current Status
 
 Verified so far:
@@ -57,6 +76,9 @@ Verified so far:
 - Gazebo-to-ROS 2 `/clock` bridge works.
 - RViz 2 opens.
 - `patrol_robot` package skeleton builds with `colcon build`.
+- Differential-drive robot model (Xacro) spawns in Gazebo and rests stably on the ground.
+- The robot moves forward and rotates in place via the Gazebo DiffDrive plugin, driven from ROS 2 through `/cmd_vel` and keyboard teleop.
+- `ros2 launch patrol_robot sim.launch.py` starts the simulation with a single command.
 
 Installed but not yet tested:
 
@@ -64,7 +86,7 @@ Installed but not yet tested:
 
 Not started yet:
 
-- Robot model (URDF/Xacro) and motion control.
+- Odometry and TF bridging to ROS 2, command timeout (watchdog).
 - Simulated LiDAR and camera.
 - Mapping and autonomous navigation.
 - Visual anomaly detection and event logging.
