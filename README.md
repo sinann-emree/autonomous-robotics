@@ -91,3 +91,82 @@ Not started yet:
 - Mapping and autonomous navigation.
 - Visual anomaly detection and event logging.
 - End-to-end tests and measurements.
+
+## SLAM (2D Mapping)
+
+This project uses slam_toolbox (online_async) for 2D mapping from /scan and /odom.
+
+Terminal 1 - simulation:
+
+```
+ros2 launch patrol_robot sim.launch.py
+```
+
+Terminal 2 - SLAM:
+
+```
+ros2 launch patrol_robot slam.launch.py
+```
+
+Terminal 3 - activate:
+
+```
+ros2 lifecycle set /slam_toolbox configure
+ros2 lifecycle set /slam_toolbox activate
+```
+
+Terminal 4 - visualize in RViz2 (Fixed Frame: map, add Map + LaserScan + RobotModel + TF):
+
+```
+rviz2
+```
+
+Terminal 5 - drive the robot:
+
+```
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=/cmd_vel_raw
+```
+
+Save the map:
+
+```
+ros2 run nav2_map_server map_saver_cli -f ~/patrol_map --ros-args -p use_sim_time:=true
+```
+
+
+## Troubleshooting
+
+### WSL2 system clock stalls gz-transport (7s periodic gaps)
+
+Symptom: /clock, /scan, /odom show 6.5-7.0s gaps every ~1.5s. ros2 topic hz reports negative min intervals.
+
+Root cause: WSL2 systemd-timesyncd periodically jumps the system clock forward by 6.5-7.0s, freezing ZeroMQ timers inside gz-transport.
+
+Evidence: gz topic -e -t /clock -n 5 shows system time jumping +6.58s while sim time advances only +0.01s.
+
+Fix:
+
+```
+sudo systemctl stop systemd-timesyncd
+sudo systemctl disable systemd-timesyncd
+sudo timedatectl set-ntp false
+```
+
+Then from Windows PowerShell: wsl --shutdown
+
+Defense-in-depth: sim.launch.py sets GZ_IP=127.0.0.1, GZ_TRANSPORT_TOPIC_STATISTICS=0, GZ_TRANSPORT_BUFFER_SIZE=1048576, applies best_effort QoS on /clock and /scan. .wslconfig sets autoMemoryReclaim=disabled and vmIdleTimeout=-1.
+
+
+## Update: Latest Verified Status
+
+The Current Status section above is now outdated. Since that writing, the following are verified working:
+
+- Odometry, TF bridging, and joint_states are flowing.
+- /scan (LiDAR) is published and visible in RViz2.
+- cmd_vel_watchdog stops the robot on command timeout.
+- slam_toolbox online_async builds a 2D OccupancyGrid at ~1 Hz.
+- Map saved (patrol_map.pgm, 164x126, resolution 0.05 m/px) and reloaded successfully.
+- WSL2 systemd-timesyncd stall diagnosed and fixed (see Troubleshooting).
+
+Still pending: Nav2 navigation, simulated camera, anomaly detection, event logging.
+

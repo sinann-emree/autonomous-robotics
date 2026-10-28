@@ -7,3 +7,19 @@ ros2_ws/log/
 __pycache__/
 *.pyc
 *.egg-info/
+
+# Colcon outputs if accidentally built from repository root
+/build/
+/install/
+/log/
+
+# Backup files
+*.bak
+
+# TF frame debug outputs
+frames_*.gv
+frames_*.pdf
+
+# Map artifacts (regenerate via map_saver_cli)
+patrol_map.pgm
+patrol_map.yaml
