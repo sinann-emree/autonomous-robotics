@@ -19,6 +19,8 @@ setup(
             glob('launch/*.launch.py')),
         (os.path.join('share', package_name, 'worlds'),
             glob('worlds/*.sdf')),
+        (os.path.join('share', package_name, 'config'),
+            glob('config/*.yaml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -33,6 +35,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+		'cmd_vel_watchdog = patrol_robot.cmd_vel_watchdog:main',
         ],
     },
 )
